@@ -78,11 +78,11 @@ export const loginController = async (req, res) => {
       return res.send({ success: false, message: "Invalid password" });
     }
 
-    const token = await JWT.sign(
-      { _id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+   const token = JWT.sign(
+  { _id: user._id, role: user.role },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
 
     res.send({
       success: true,
@@ -141,5 +141,18 @@ export const forgotPasswordController = async (req, res) => {
       message: "Error in forgot password",
       error,
     });
+  }
+};
+
+
+
+
+//manage users 
+export const allUsersController = async (req, res) => {
+  try {
+    const users = await userModel.find().select("-password");
+    res.send({ success: true, users });
+  } catch (error) {
+    res.send({ success: false, message: "Error loading users" });
   }
 };
