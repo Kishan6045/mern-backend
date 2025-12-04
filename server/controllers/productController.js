@@ -27,3 +27,44 @@ export const createProductController = async (req, res) => {
     res.send({ success: false, message: "Error creating product", error });
   }
 };
+
+
+// Controller to get product 
+export const getProductController = async (req, res) => {
+  try {
+    const products = await productModel
+      .find({})
+      .select("-photo")
+      .sort({ createdAt: -1 });
+
+    res.send({
+      success: true,
+      products,
+    });
+
+  } catch (error) {
+    res.send({
+      success: false,
+      message: "Error getting products",
+      error,
+    });
+  }
+};
+
+
+// Controller to get product photo
+export const productPhotoController = async (req, res) => {
+  try {
+    const product = await productModel.findById(req.params.pid).select("photo");
+
+    if (product.photo.data) {
+      res.set("Content-type", product.photo.contentType);
+      return res.send(product.photo.data);
+    } else {
+      return res.send("No Image");
+    }
+
+  } catch (error) {
+    res.send({ error });
+  }
+};

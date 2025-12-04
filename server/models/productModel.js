@@ -6,9 +6,21 @@ const productSchema = new mongoose.Schema(
     slug: { type: String, lowercase: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
-    category: { type: mongoose.ObjectId, ref: "Category", required: true },
+
+    category: {
+      type: mongoose.ObjectId,
+      ref: "Category",
+      required: true
+    },
+
+    subcategory: {
+      type: String,
+      default: ""
+    },
+
     quantity: { type: Number, required: true },
     shipping: { type: Boolean, default: true },
+
     photo: {
       data: Buffer,
       contentType: String
