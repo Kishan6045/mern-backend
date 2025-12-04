@@ -5,21 +5,26 @@ import {
   getUserOrdersController,
   getAllOrdersController,
   updateOrderStatusController,
+  updateOrderMetaController,
+  cancelOrderController,
+  requestReturnController,
+  getInvoiceController,
+  getShippingLabelController,
 } from "../controllers/orderController.js";
-
 
 const router = express.Router();
 
-// Create Order
+// USER
 router.post("/create-order", requireSignIn, createOrderController);
-
-// User Orders
 router.get("/user-orders", requireSignIn, getUserOrdersController);
+router.put("/cancel/:orderId", requireSignIn, cancelOrderController);
+router.post("/return-request/:orderId", requireSignIn, requestReturnController);
+router.get("/invoice/:orderId", requireSignIn, getInvoiceController);
 
-// Admin Orders
+// ADMIN
 router.get("/all-orders", requireSignIn, isAdmin, getAllOrdersController);
-
-// Update order status (Admin)
 router.put("/order-status/:orderId", requireSignIn, isAdmin, updateOrderStatusController);
+router.put("/order-meta/:orderId", requireSignIn, isAdmin, updateOrderMetaController);
+router.get("/shipping-label/:orderId", requireSignIn, isAdmin, getShippingLabelController);
 
 export default router;

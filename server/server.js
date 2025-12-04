@@ -9,6 +9,10 @@ import productRoutes from "./routes/productRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import orderRoutes from "./routes/orderRoute.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
+
+
 
 
 dotenv.config();
@@ -33,6 +37,10 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/category", categoryRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/order", orderRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/coupon", couponRoutes);
+
+
 
 
 // DEFAULT
