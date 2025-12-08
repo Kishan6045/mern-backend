@@ -9,21 +9,41 @@ const couponSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
-
-    discount: {
-      type: Number,
-      required: true,   // % discount
+    // "percent" = percentage based (like 50%)
+    // "flat" = flat discount (like ₹200 off)
+    discountType: {
+      type: String,
+      enum: ["percent", "flat"],
+      default: "percent",
     },
-
+    discountValue: {
+      type: Number,
+      required: true, // percent ya flat ka value
+    },
+    minAmount: {
+      type: Number,
+      default: 0, // itne se kam amount pe coupon na lage
+    },
+    maxDiscount: {
+      type: Number,
+      default: 0, // 0 = no limit, warna max discount (₹ me)
+    },
     expiresAt: {
       type: Date,
-      required: true,
+      default: null, // null = no expiry
     },
-
-    active: {
+    isActive: {
       type: Boolean,
       default: true,
-    }
+    },
+
+    
+    usedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }
+    ]
   },
   { timestamps: true }
 );

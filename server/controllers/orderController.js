@@ -16,7 +16,6 @@ export const createOrderController = async (req, res) => {
       address,
       coupon,
       discount,
-      giftMessage,
     } = req.body;
 
     // VALIDATION
@@ -37,7 +36,6 @@ export const createOrderController = async (req, res) => {
       coupon,
 
       // Optional fields
-      giftMessage,
       address,
 
       // Status Fields
