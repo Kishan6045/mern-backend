@@ -1,31 +1,3 @@
-// import express from "express";
-// import {
-//   registerController,
-//   loginController,
-//   forgotPasswordController,
-//   allUsersController
-// } from "../controllers/authController.js";
-
-// import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
-
-// const router = express.Router();
-
-// // REGISTER
-// router.post("/register", registerController);
-
-// // LOGIN
-// router.post("/login", loginController);
-
-// // Forgot password
-// router.post("/forgot-password", forgotPasswordController);
-
-// // Manage Users
-// router.get("/all-users", requireSignIn, isAdmin, allUsersController);
-
-// export default router;
-
-
-
 import express from "express";
 import {
   registerController,
@@ -35,7 +7,9 @@ import {
   forgotPasswordByAge,
   toggleWishlistController,
   getWishlistController,
-  allUsersController
+  allUsersController,
+  getUserDetailController,
+  updateProfileController
 } from "../controllers/authController.js";
 
 import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
@@ -59,7 +33,7 @@ router.post("/login", loginController);
 // 1️⃣ Age-based quick reset
 router.post("/forgot-password-age", forgotPasswordByAge);
 
-// 2️⃣ Real email reset link
+// 2️⃣ Email reset link
 router.post("/forgot-password", forgotPasswordController);
 
 // Reset password using token
@@ -70,9 +44,13 @@ router.post("/reset-password/:token", resetPasswordController);
 --------------------------------*/
 
 // Toggle wishlist (add/remove)
-router.post("/toggle-wishlist/:productId", requireSignIn, toggleWishlistController);
+router.post(
+  "/toggle-wishlist/:productId",
+  requireSignIn,
+  toggleWishlistController
+);
 
-// Get my wishlist
+// Get user's wishlist
 router.get("/my-wishlist", requireSignIn, getWishlistController);
 
 /* -------------------------------
@@ -81,5 +59,13 @@ router.get("/my-wishlist", requireSignIn, getWishlistController);
 
 // Get all users
 router.get("/all-users", requireSignIn, isAdmin, allUsersController);
+
+// Get full user detail (profile + orders)
+router.get("/user-detail/:id", requireSignIn, isAdmin, getUserDetailController);
+
+
+// Update user profile
+router.put("/profile", requireSignIn, updateProfileController);
+
 
 export default router;

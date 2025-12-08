@@ -11,6 +11,8 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import orderRoutes from "./routes/orderRoute.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+
 
 
 
@@ -39,6 +41,8 @@ app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/coupon", couponRoutes);
+app.use("/api/v1/payment", paymentRoutes);
+
 
 
 

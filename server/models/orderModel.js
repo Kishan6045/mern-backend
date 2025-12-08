@@ -1,68 +1,94 @@
 import mongoose from "mongoose";
 
 const orderStatusEnum = [
-  "Pending",           // Just Placed
-  "Accepted",          // Seller accepted
-  "Packed",            // Packed & ready
-  "Shipped",           // Courier picked
-  "Out For Delivery",  // Near customer
-  "Delivered",         // Completed delivery
-  "Cancelled",         // Cancelled by user/seller
-  "Return Requested",  // User wants to return
-  "Return Approved",   // Seller approved return
-  "Return Rejected",   // Seller denied return
-  "Refunded",          // Refund processed to user
+  "Pending",
+  "Accepted",
+  "Packed",
+  "Shipped",
+  "Out For Delivery",
+  "Delivered",
+  "Cancelled",
+  "Return Requested",
+  "Return Approved",
+  "Return Rejected",
+  "Refunded",
 ];
 
 const orderSchema = new mongoose.Schema(
   {
+    // --------------------------
+    // PRODUCTS
+    // --------------------------
     products: [
       {
         type: mongoose.ObjectId,
-        ref: "Product",
+        ref: "Product",   // keep correct collection name
         required: true,
       },
     ],
 
+    // --------------------------
+    // BUYER
+    // --------------------------
     buyer: {
       type: mongoose.ObjectId,
       ref: "User",
       required: true,
     },
 
+    // --------------------------
+    // PAYMENT DETAILS
+    // --------------------------
     payment: {
-      method: { type: String }, // cod / upi / card / razorpay
-      status: { type: String }, // paid / pending / failed
+      method: String, // cod / upi / card / razorpay
+      status: String, // paid / pending / failed
+      card: String, // saved card name if used
 
-      // Razorpay details
+      // Razorpay fields
       razorpayOrderId: String,
       razorpayPaymentId: String,
       razorpaySignature: String,
     },
 
-    amount: {
-      type: Number,
-      required: true,
-    },
+    // --------------------------
+    // PRICE DETAILS
+    // --------------------------
+    amount: Number,          // final payable
+    itemsTotal: Number,      // product price total
+    deliveryCharge: Number,  // delivery fee
+    discount: Number,        // discount value
+    coupon: String,          // applied coupon
 
+    // --------------------------
+    // ADDRESS
+    // --------------------------
     address: {
       type: String,
       required: true,
     },
 
-    // ⭐ MAIN ORDER STATUS
+    // --------------------------
+    // GIFT MESSAGE
+    // --------------------------
+    giftMessage: String,
+
+    // --------------------------
+    // ORDER STATUS
+    // --------------------------
     status: {
       type: String,
       default: "Pending",
       enum: orderStatusEnum,
     },
 
-    // ⭐ Seller / Courier Info
+    // Courier / Seller Info
     trackingId: { type: String, default: "" },
     courierPartner: { type: String, default: "" },
     notes: { type: String, default: "" },
 
-    // ⭐ AUTOMATIC STATUS TIMELINE
+    // --------------------------
+    // STATUS TIMELINE RECORD
+    // --------------------------
     statusTimestamps: {
       placedAt: Date,
       acceptedAt: Date,
@@ -77,7 +103,9 @@ const orderSchema = new mongoose.Schema(
       refundedAt: Date,
     },
 
-    // ⭐ History Log (timeline)
+    // --------------------------
+    // STATUS LOG HISTORY
+    // --------------------------
     statusLogs: [
       {
         status: String,
@@ -86,7 +114,9 @@ const orderSchema = new mongoose.Schema(
       },
     ],
 
-    // ⭐ Return Details
+    // --------------------------
+    // RETURN DETAILS
+    // --------------------------
     returnReason: String,
     returnComment: String,
   },

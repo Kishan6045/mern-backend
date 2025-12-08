@@ -4,28 +4,28 @@ import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
 import {
   getAdminStatsController,
   getSalesAnalyticsController,
-  dailySummaryController,
+  getDailySummaryController,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
 
-// DASHBOARD CARDS
+// Overall stats (total users, products, orders)
 router.get("/stats", requireSignIn, isAdmin, getAdminStatsController);
 
-// SALES ANALYTICS
+// Today's summary (AdminDashboard me use ho raha hai)
+router.get(
+  "/daily-summary",
+  requireSignIn,
+  isAdmin,
+  getDailySummaryController
+);
+
+// Sales analytics (charts ke liye)
 router.get(
   "/sales-analytics",
   requireSignIn,
   isAdmin,
   getSalesAnalyticsController
-);
-
-// DAILY SUMMARY (today)
-router.get(
-  "/daily-summary",
-  requireSignIn,
-  isAdmin,
-  dailySummaryController
 );
 
 export default router;

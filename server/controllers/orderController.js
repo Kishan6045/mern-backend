@@ -7,30 +7,64 @@ import productModel from "../models/productModel.js";
 ====================================================== */
 export const createOrderController = async (req, res) => {
   try {
-    const { products, payment, amount, address } = req.body;
-
-    if (!products?.length)
-      return res.send({ success: false, message: "No products in order" });
-
-    const order = await orderModel.create({
+    const {
       products,
       payment,
-      amount,
+      amount,          // Final payable amount (product total - discount + delivery)
+      itemsTotal,      // Total of products only
+      deliveryCharge,  // Delivery fee
       address,
+      coupon,
+      discount,
+      giftMessage,
+    } = req.body;
+
+    // VALIDATION
+    if (!products || !products.length)
+      return res.send({ success: false, message: "No products in order" });
+
+    // CREATE ORDER
+    const order = await orderModel.create({
+      products,
       buyer: req.user._id,
+      payment,
+
+      // All Amount Fields
+      amount,
+      itemsTotal,
+      deliveryCharge,
+      discount,
+      coupon,
+
+      // Optional fields
+      giftMessage,
+      address,
+
+      // Status Fields
       status: "Pending",
       statusTimestamps: { placedAt: new Date() },
       statusLogs: [{ status: "Pending", date: new Date() }],
     });
 
+    // UPDATE PRODUCT SOLD + QUANTITY
     await productModel.updateMany(
       { _id: { $in: products } },
       { $inc: { sold: 1, quantity: -1 } }
     );
 
-    res.send({ success: true, message: "Order Placed", order });
-  } catch (error) {
-    res.status(500).send({ success: false, message: "Error", error });
+    res.send({
+      success: true,
+      message: "Order Created Successfully",
+      order,
+    });
+
+  } catch (err) {
+    console.log("ORDER CREATE ERROR:", err);
+    res.status(500).send({
+      success: false,
+      message: "Order creation failed",
+      err,
+    });
   }
 };
 
