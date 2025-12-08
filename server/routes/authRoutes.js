@@ -9,7 +9,8 @@ import {
   getWishlistController,
   allUsersController,
   getUserDetailController,
-  updateProfileController
+  updateProfileController,
+  googleLoginController
 } from "../controllers/authController.js";
 
 import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
@@ -38,6 +39,10 @@ router.post("/forgot-password", forgotPasswordController);
 
 // Reset password using token
 router.post("/reset-password/:token", resetPasswordController);
+
+// Google Login
+router.post("/google-login", googleLoginController);
+
 
 /* -------------------------------
    WISHLIST

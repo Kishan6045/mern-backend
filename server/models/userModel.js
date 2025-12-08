@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, "Password is required"],
+      default: "", // Google login works without password
     },
 
     phone: {
@@ -31,8 +31,7 @@ const userSchema = new mongoose.Schema(
 
     age: {
       type: Number,
-      required: [true, "Age is required"],
-      min: [1, "Age must be at least 1"],
+      default: 0,  // <-- FIXED (Google age not provided)
     },
 
     role: {
@@ -40,7 +39,19 @@ const userSchema = new mongoose.Schema(
       default: 0, // 0 = user, 1 = admin
     },
 
-    // ⭐ Wishlist (Many products)
+    // ⭐ Google Login Flag
+    googleUser: {
+      type: Boolean,
+      default: false,
+    },
+
+    // ⭐ Google Profile Image
+    picture: {
+      type: String,
+      default: "",
+    },
+
+    // ⭐ Wishlist
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -48,7 +59,6 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    // ⭐ Password Reset Token System
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },

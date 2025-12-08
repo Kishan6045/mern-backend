@@ -395,16 +395,28 @@ import nodemailer from "nodemailer";
 // ---------------- REGISTER ----------------
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, age } = req.body;
+    let { name, email, password, age } = req.body;
 
     if (!name || !email || !password || !age)
       return res.send({ success: false, message: "All fields required" });
+
+    // Normalize email
+    email = email.toLowerCase();
+
+    // Gmail check
+    if (!email.endsWith("@gmail.com")) {
+      return res.send({
+        success: false,
+        message: "Please use your valid Gmail account.",
+      });
+    }
 
     const exists = await userModel.findOne({ email });
     if (exists)
       return res.send({ success: false, message: "Already registered" });
 
     const hashed = await hashPassword(password);
+
     const user = await userModel.create({
       name,
       email,
@@ -413,10 +425,12 @@ export const registerController = async (req, res) => {
     });
 
     res.send({ success: true, message: "Registered", user });
+
   } catch (err) {
     res.status(500).send({ success: false, message: "Register error", err });
   }
 };
+
 
 // ---------------- LOGIN ----------------
 export const loginController = async (req, res) => {
@@ -684,6 +698,64 @@ export const updateProfileController = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error updating profile",
+      err,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+// ---------------- GOOGLE LOGIN ----------------
+// ---------------- GOOGLE LOGIN (ONLY IF USER ALREADY REGISTERED) ----------------
+export const googleLoginController = async (req, res) => {
+  try {
+    const { email, name, picture } = req.body;
+
+    if (!email) {
+      return res.send({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    // Check if user already exists in DB
+    const user = await userModel.findOne({ email });
+
+    // ❌ User NOT registered earlier → Don't allow Google signup
+    if (!user) {
+      return res.send({
+        success: false,
+        message: "Please register first using Email & Password.",
+      });
+    }
+
+    // ✔ User exists → Login using Google
+    const token = JWT.sign(
+      { _id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.send({
+      success: true,
+      message: "Google Login Successful",
+      user,
+      token,
+    });
+
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: "Google Login Error",
       err,
     });
   }
