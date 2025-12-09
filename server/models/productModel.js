@@ -54,26 +54,20 @@ const productSchema = new mongoose.Schema(
       default: "",
     },
 
-    // ⭐ Order-based analytics
-    sold: {
-      type: Number,
-      default: 0,
-    },
-
+    // ⭐ Analytics
+    sold: { type: Number, default: 0 },
     quantity: { type: Number, required: true },
-
-    shipping: {
-      type: Boolean,
-      default: true,
-    },
+    shipping: { type: Boolean, default: true },
 
     //
-    // ⭐ Photo
+    // ⭐ MULTIPLE IMAGES ARRAY — CORRECT FIX
     //
-    photo: {
-      data: Buffer,
-      contentType: String,
-    },
+    images: [
+  {
+    type: String,  // image file path
+  }
+],
+
 
     //
     // ⭐ Reviews & Ratings
@@ -88,7 +82,6 @@ const productSchema = new mongoose.Schema(
     isFeatured: { type: Boolean, default: false },
     isNewArrival: { type: Boolean, default: false },
     isTrending: { type: Boolean, default: false },
-
   },
   { timestamps: true }
 );

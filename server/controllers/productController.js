@@ -2,31 +2,58 @@
 import productModel from "../models/productModel.js";
 import slugify from "slugify";
 import fs from "fs";
+import path from "path";
+
 
 // =========================
-// CREATE PRODUCT
+// CREATE PRODUCT (FINAL FIXED VERSION)
 // =========================
 export const createProductController = async (req, res) => {
   try {
     const { name, description, price, category, quantity, shipping } = req.fields;
-    const { photo } = req.files;
+    const files = req.files;
 
+    // Validation
     if (!name) return res.send({ success: false, message: "Name is required" });
     if (!description) return res.send({ success: false, message: "Description is required" });
     if (!price) return res.send({ success: false, message: "Price is required" });
     if (!category) return res.send({ success: false, message: "Category is required" });
     if (!quantity) return res.send({ success: false, message: "Quantity is required" });
 
+    // Create product
     const product = new productModel({
       ...req.fields,
       slug: slugify(name),
+      images: [],
     });
 
-    if (photo) {
-      product.photo.data = fs.readFileSync(photo.path);
-      product.photo.contentType = photo.type;
+    // -----------------------------
+    // HANDLE MULTIPLE IMAGES
+    // -----------------------------
+    let photos = [];
+
+    if (files.photos) {
+      photos = Array.isArray(files.photos) ? files.photos : [files.photos];
     }
 
+    // Create uploads folder if missing
+    if (!fs.existsSync("uploads")) {
+      fs.mkdirSync("uploads");
+    }
+
+    // SAVE EACH IMAGE
+    for (let file of photos) {
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `uploads/${fileName}`;
+
+      // ⭐ FIX: renameSync fails on Windows (C: → E:) → use copy + delete
+      fs.copyFileSync(file.path, filePath);
+      fs.unlinkSync(file.path);
+
+      product.images.push(filePath);
+    }
+
+    // Save to DB
     await product.save();
 
     res.send({
@@ -34,10 +61,14 @@ export const createProductController = async (req, res) => {
       message: "Product created successfully",
       product,
     });
+
   } catch (error) {
+    console.log("CREATE PRODUCT ERROR:", error);
     res.send({ success: false, message: "Error creating product", error });
   }
 };
+
+
 
 // =========================
 // GET ALL PRODUCTS WITH FILTER (gender + type)
@@ -105,18 +136,29 @@ export const getSingleProductController = async (req, res) => {
 // =========================
 export const productPhotoController = async (req, res) => {
   try {
-    const product = await productModel.findById(req.params.pid).select("photo");
+    const { pid } = req.params;
+    const index = req.query.index || 0;
 
-    if (product?.photo?.data) {
-      res.set("Content-type", product.photo.contentType);
-      return res.send(product.photo.data);
+    const product = await productModel.findById(pid).select("images");
+
+    if (!product || !product.images[index]) {
+      return res.status(404).send("Image not found");
     }
 
-    res.send("No Image");
+    const imagePath = path.resolve(product.images[index]);
+
+    if (!fs.existsSync(imagePath)) {
+      return res.status(404).send("File not found");
+    }
+
+    res.sendFile(imagePath);
   } catch (error) {
-    res.send({ success: false, error });
+    console.log("PHOTO ERROR:", error);
+    res.status(500).send({ success: false, error });
   }
 };
+
+
 
 // =========================
 // GET ALL PRODUCTS (ADMIN) WITH SEARCH + FILTER
@@ -151,40 +193,71 @@ export const getAllAdminProductsController = async (req, res) => {
   }
 };
 
+
+
 // =========================
-// UPDATE PRODUCT
+// UPDATE PRODUCT (FINAL WINDOWS-SAFE VERSION)
 // =========================
 export const updateProductController = async (req, res) => {
   try {
-    const { name } = req.fields;
-    const { photo } = req.files;
+    const { pid } = req.params;
+    const files = req.files || {}; // ⭐ safe: if no files, empty object
 
-    const updates = {
-      ...req.fields,
-    };
-
-    if (name) {
-      updates.slug = slugify(name);
-    }
-
-    let product = await productModel.findByIdAndUpdate(
-      req.params.pid,
-      updates,
-      { new: true }
-    );
-
+    let product = await productModel.findById(pid);
     if (!product) {
-      return res.status(404).send({
-        success: false,
-        message: "Product not found",
-      });
+      return res
+        .status(404)
+        .send({ success: false, message: "Product not found" });
     }
 
-    if (photo) {
-      product.photo.data = fs.readFileSync(photo.path);
-      product.photo.contentType = photo.type;
-      await product.save();
+    // 1️⃣ UPDATE TEXT FIELDS
+    if (req.fields.name) {
+      product.slug = slugify(req.fields.name);
     }
+    Object.assign(product, req.fields);
+
+    // 2️⃣ DELETE SELECTED IMAGES (from frontend)
+    if (req.fields.deleteIndexes) {
+      let indexes = [];
+
+      try {
+        indexes = JSON.parse(req.fields.deleteIndexes); // e.g. [0,2]
+      } catch (err) {
+        indexes = [];
+      }
+
+      // delete from uploads folder also
+      indexes.forEach((i) => {
+        if (product.images[i] && fs.existsSync(product.images[i])) {
+          fs.unlinkSync(product.images[i]);
+        }
+      });
+
+      product.images = product.images.filter((_, i) => !indexes.includes(i));
+    }
+
+    // 3️⃣ ADD NEW IMAGES (Same logic as createProductController)
+    let photos = [];
+    if (files.photos) {
+      photos = Array.isArray(files.photos) ? files.photos : [files.photos];
+    }
+
+    if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
+
+    for (let file of photos) {
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `uploads/${fileName}`;
+
+      // ⭐ IMPORTANT: renameSync -> EXDEV error on Windows C:→E:
+      // Use copy + delete (same as createProductController)
+      fs.copyFileSync(file.path, filePath);
+      fs.unlinkSync(file.path);
+
+      product.images.push(filePath);
+    }
+
+    // 4️⃣ SAVE PRODUCT
+    await product.save();
 
     res.send({
       success: true,
@@ -192,6 +265,7 @@ export const updateProductController = async (req, res) => {
       product,
     });
   } catch (error) {
+    console.log("UPDATE PRODUCT ERROR:", error);
     res.status(500).send({
       success: false,
       message: "Error updating product",
@@ -199,6 +273,7 @@ export const updateProductController = async (req, res) => {
     });
   }
 };
+
 
 // =========================
 // DELETE PRODUCT

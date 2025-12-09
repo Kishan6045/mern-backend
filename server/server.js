@@ -42,6 +42,8 @@ app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/coupon", couponRoutes);
 app.use("/api/v1/payment", paymentRoutes);
+app.use("/uploads", express.static("uploads"));
+
 
 
 
